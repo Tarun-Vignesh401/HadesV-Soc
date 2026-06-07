@@ -25,6 +25,48 @@ module fetch_stage (
 );
 
     // TODO: Delete the following line and implement this module.
-    ref_fetch_stage golden(.*);
+    //ref_fetch_stage golden(.*);
+    logic [31:0] instruction_fetch;
+    logic [31:0] pc_fetch;
+    logic [31:0] jump_address_fetch;
+    pipeline_status::forwards_t status_forwards_fetch;
+    pipeline_status::backwards_t status_backwards_fetch;
+   
+ always_ff @(clk,rst) begin 
+    if(rst) begin
+        pc_fetch <= constants::RESTART_ADDRESS;               
+        wb.stb <= 0;
+        wb.we  <= 0;
+        wb.cyc <= 0;
+        wb.adr <= 0;
+        wb.sel <=0;
+        wb.data_mosi <= 0;
+        status_forwards_fetch <= VALID;
+
+    end else begin
+        if(status_backwasds_fetch == READY) begin
+        pc_fetch <= pc_fetch + 4;
+        wb.stb <= 1;
+        wb.cyc <= 1;
+        
+
+
+        end
+        else if(status_backwards_fetch == JUMP)begin
+
+
+        end
+        else begin
+
+
+        end
+
+
+
+    end
+
+
+    
+        
 
 endmodule
