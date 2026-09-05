@@ -26,44 +26,59 @@ module fetch_stage (
 
     // TODO: Delete the following line and implement this module.
     //ref_fetch_stage golden(.*);
-    logic [31:0] instruction_fetch;
-    logic [31:0] pc_fetch;
-    logic [31:0] jump_address_fetch;
+    //logic [31:0] instruction_fetch;
+    //logic [31:0] pc_fetch;
+    //logic [31:0] jump_address_fetch;
     pipeline_status::forwards_t status_forwards_fetch;
     pipeline_status::backwards_t status_backwards_fetch;
+
+
+    logic [31:0] word_address;
+    logic [1:0] word_offset;
+
+//this dude changes if pc changes instantaneously......
+//pc alignment
+always_comb begin
+    word_address = program_counter_reg_out & 32'h1111_1100;
+    word_offset = program_counter_reg_out & 32'h0000_0011;
+end
+
+always_comb begin
+      if(status_backwards_in == READY) begin
+        wb.cyc = 1;
+        wb.stb = 1;
+        wb.adr = word_address;
+        wb.sel = word_offset;    
+        wb.miso = instruction_fetch;
+        if(wb.ack | wb.err)begin
+            wb.stb = 0;
+            wb.cyc = 0;
+            if(wb.err)begin
+                wb.cyc = 1;
+                wb.stb = 1;
+                wb.adr = word_address;
+                wb.sel = word_offset; 
+            end
+        end
+    end
+    else if(status_backwards_in == JUMP)begin
+        
+    end
+end
    
  always_ff @(clk,rst) begin 
     if(rst) begin
-        pc_fetch <= constants::RESTART_ADDRESS;               
-        wb.stb <= 0;
-        wb.we  <= 0;
-        wb.cyc <= 0;
-        wb.adr <= 0;
-        wb.sel <=0;
-        wb.data_mosi <= 0;
-        status_forwards_fetch <= VALID;
-
-    end else begin
-        if(status_backwasds_fetch == READY) begin
-        pc_fetch <= pc_fetch + 4;
-        wb.stb <= 1;
-        wb.cyc <= 1;
-        
-
-
-        end
-        else if(status_backwards_fetch == JUMP)begin
-
-
-        end
-        else begin
-
-
-        end
-
-
-
+        program_counter_reg_out <= constants::RESTART_ADDRESS;               
+        status_forwards_out <= VALID;
+    end 
+    else begin
+        program_counter_reg_out <= pc_fetch + 4;
+        instruction_reg_out <= wb.miso;
     end
+
+
+
+end
 
 
     
